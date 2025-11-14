@@ -8,7 +8,7 @@ const CartPage = () => {
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-lg">
-      <h1 className="text-3xl font-bold text-fuchsia-700 mb-6">Carrinho de Compras</h1>
+      <h1 className="text-3xl font-bold text-pink-600 mb-6">Carrinho de Compras</h1>
       {cart.length === 0 ? (
         <div className="text-center py-10">
           <p className="text-gray-600 text-xl">Seu carrinho está vazio.</p>
@@ -33,7 +33,7 @@ const CartPage = () => {
                   min="1"
                   value={item.quantity}
                   onChange={(e) => updateQuantity(item.id, parseInt(e.target.value))}
-                  className="w-16 text-center border rounded-md py-1"
+                  className="w-16 text-center border rounded-md py-1 focus:outline-none focus:ring-2 focus:ring-pink-400"
                 />
                 <p className="font-semibold w-24 text-right">
                   R$ {(item.price * item.quantity).toFixed(2).replace('.', ',')}
@@ -46,7 +46,7 @@ const CartPage = () => {
           ))}
           <div className="mt-6 text-right">
             <h3 className="text-2xl font-bold">Total: R$ {cartTotal.toFixed(2).replace('.', ',')}</h3>
-            <Link to="/checkout" className="mt-4 inline-block px-8 py-3 bg-fuchsia-500 text-white font-bold rounded-lg hover:bg-fuchsia-600 transition-colors">
+            <Link to="/checkout" className="mt-4 inline-block px-8 py-3 bg-pink-500 text-white font-bold rounded-lg hover:bg-pink-600 transition-colors">
               Finalizar Compra
             </Link>
           </div>

@@ -5,9 +5,9 @@ import { getUsers, setUsers } from '../services/localStorageService';
 
 interface AuthContextType {
   currentUser: User | null;
-  login: (email: string, password_DO_NOT_USE: string) => boolean;
+  login: (phone: string) => boolean;
   logout: () => void;
-  register: (name: string, email: string, password_DO_NOT_USE: string) => boolean;
+  register: (name: string, phone: string) => boolean;
   users: User[];
 }
 
@@ -26,10 +26,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  const login = (email: string, password_DO_NOT_USE: string): boolean => {
-    const user = users.find(u => u.email === email);
-    // In a real app, password would be hashed and checked on the server.
-    // Here we just check for existence.
+  const login = (phone: string): boolean => {
+    const user = users.find(u => u.phone === phone);
     if (user) {
       setCurrentUser(user);
       sessionStorage.setItem('currentUser', JSON.stringify(user));
@@ -43,14 +41,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     sessionStorage.removeItem('currentUser');
   };
 
-  const register = (name: string, email: string, password_DO_NOT_USE: string): boolean => {
-    if (users.some(u => u.email === email)) {
+  const register = (name: string, phone: string): boolean => {
+    if (users.some(u => u.phone === phone)) {
       return false; // User already exists
     }
     const newUser: User = {
       id: Date.now().toString(),
       name,
-      email,
+      phone,
       role: UserRole.CUSTOMER,
     };
     const updatedUsers = [...users, newUser];

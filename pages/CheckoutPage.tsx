@@ -15,7 +15,8 @@ const CheckoutPage = () => {
   const [address, setAddress] = useState({ street: '', city: 'Fortaleza', zip: '' });
   
   if (!currentUser) {
-      navigate('/login');
+      // Redirect to register page if not logged in
+      navigate('/register');
       return null;
   }
   
@@ -30,7 +31,7 @@ const CheckoutPage = () => {
       id: Date.now().toString(),
       userId: currentUser.id,
       customerName: currentUser.name,
-      customerEmail: currentUser.email,
+      customerPhone: currentUser.phone,
       items: cart,
       total: cartTotal,
       address,
@@ -53,27 +54,27 @@ const CheckoutPage = () => {
   return (
     <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
       <div className="bg-white p-6 rounded-lg shadow-lg">
-        <h2 className="text-2xl font-bold text-fuchsia-700 mb-4">Endereço de Entrega</h2>
+        <h2 className="text-2xl font-bold text-pink-600 mb-4">Endereço de Entrega</h2>
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label htmlFor="street" className="block font-bold mb-1">Rua e Número</label>
-            <input type="text" name="street" id="street" value={address.street} onChange={handleInputChange} className="w-full border rounded-md p-2" required />
+            <input type="text" name="street" id="street" value={address.street} onChange={handleInputChange} className="w-full border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-pink-400" required />
           </div>
           <div className="mb-4">
             <label htmlFor="city" className="block font-bold mb-1">Cidade</label>
-            <input type="text" name="city" id="city" value={address.city} onChange={handleInputChange} className="w-full border rounded-md p-2" required />
+            <input type="text" name="city" id="city" value={address.city} onChange={handleInputChange} className="w-full border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-pink-400" required />
           </div>
           <div className="mb-4">
             <label htmlFor="zip" className="block font-bold mb-1">CEP</label>
-            <input type="text" name="zip" id="zip" value={address.zip} onChange={handleInputChange} className="w-full border rounded-md p-2" required />
+            <input type="text" name="zip" id="zip" value={address.zip} onChange={handleInputChange} className="w-full border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-pink-400" required />
           </div>
-          <button type="submit" className="w-full mt-4 px-8 py-3 bg-fuchsia-500 text-white font-bold rounded-lg hover:bg-fuchsia-600 transition-colors">
+          <button type="submit" className="w-full mt-4 px-8 py-3 bg-pink-500 text-white font-bold rounded-lg hover:bg-pink-600 transition-colors">
             Confirmar Pedido
           </button>
         </form>
       </div>
       <div className="bg-white p-6 rounded-lg shadow-lg">
-        <h2 className="text-2xl font-bold text-fuchsia-700 mb-4">Resumo do Pedido</h2>
+        <h2 className="text-2xl font-bold text-pink-600 mb-4">Resumo do Pedido</h2>
         {cart.map(item => (
           <div key={item.id} className="flex justify-between items-center border-b py-2">
             <span>{item.quantity}x {item.name}</span>

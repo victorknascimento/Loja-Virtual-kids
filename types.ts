@@ -7,8 +7,7 @@ export enum UserRole {
 export interface User {
   id: string;
   name: string;
-  email: string;
-  password?: string; // Should not be stored in frontend state long-term
+  phone: string;
   role: UserRole;
 }
 
@@ -36,6 +35,6 @@ export interface Order {
     zip: string;
   };
   customerName: string;
-  customerEmail: string;
+  customerPhone: string;
   timestamp: string;
 }

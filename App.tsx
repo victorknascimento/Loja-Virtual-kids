@@ -26,7 +26,7 @@ function App() {
         <CartProvider>
           <DataInitializer />
           <HashRouter>
-            <div className="flex flex-col min-h-screen bg-pink-50 font-sans">
+            <div className="flex flex-col min-h-screen bg-white font-sans">
               <Header />
               <main className="flex-grow container mx-auto px-4 py-8">
                 <Routes>
@@ -34,7 +34,7 @@ function App() {
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/register" element={<RegisterPage />} />
                   <Route path="/cart" element={<CartPage />} />
-                  <Route path="/checkout" element={<CheckoutPage />} />
+                  <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
                   <Route path="/confirmation" element={<ConfirmationPage />} />
                   
                   <Route path="/admin" element={<ProtectedRoute adminOnly={true}><AdminPage /></ProtectedRoute>} />

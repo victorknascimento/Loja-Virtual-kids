@@ -64,8 +64,8 @@ const AdminProducts = () => {
   return (
     <div className="bg-white p-6 rounded-lg shadow-lg">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-fuchsia-700">Gerenciar Produtos</h1>
-        <button onClick={() => openModal()} className="px-4 py-2 bg-fuchsia-500 text-white font-bold rounded-lg hover:bg-fuchsia-600">
+        <h1 className="text-3xl font-bold text-pink-600">Gerenciar Produtos</h1>
+        <button onClick={() => openModal()} className="px-4 py-2 bg-pink-500 text-white font-bold rounded-lg hover:bg-pink-600">
           Adicionar Produto
         </button>
       </div>
@@ -103,30 +103,30 @@ const AdminProducts = () => {
             <form onSubmit={handleSubmit}>
               <div className="mb-4">
                 <label className="block mb-1">Nome</label>
-                <input type="text" name="name" value={currentProduct.name} onChange={handleChange} className="w-full border p-2 rounded" required />
+                <input type="text" name="name" value={currentProduct.name} onChange={handleChange} className="w-full border p-2 rounded focus:outline-none focus:ring-2 focus:ring-pink-400" required />
               </div>
               <div className="mb-4">
                 <label className="block mb-1">Categoria</label>
-                <input type="text" name="category" value={currentProduct.category} onChange={handleChange} className="w-full border p-2 rounded" required />
+                <input type="text" name="category" value={currentProduct.category} onChange={handleChange} className="w-full border p-2 rounded focus:outline-none focus:ring-2 focus:ring-pink-400" required />
               </div>
               <div className="mb-4">
                 <label className="block mb-1">Descrição</label>
-                 <textarea name="description" value={currentProduct.description} onChange={handleChange} className="w-full border p-2 rounded" rows={3} required />
+                 <textarea name="description" value={currentProduct.description} onChange={handleChange} className="w-full border p-2 rounded focus:outline-none focus:ring-2 focus:ring-pink-400" rows={3} required />
                  <button type="button" onClick={handleGenerateDescription} disabled={isGenerating} className="mt-2 text-sm px-3 py-1 bg-purple-500 text-white rounded hover:bg-purple-600 disabled:bg-gray-400">
                     {isGenerating ? 'Gerando...' : 'Gerar com IA'}
                  </button>
               </div>
               <div className="mb-4">
                 <label className="block mb-1">Preço</label>
-                <input type="number" name="price" step="0.01" value={currentProduct.price} onChange={handleChange} className="w-full border p-2 rounded" required />
+                <input type="number" name="price" step="0.01" value={currentProduct.price} onChange={handleChange} className="w-full border p-2 rounded focus:outline-none focus:ring-2 focus:ring-pink-400" required />
               </div>
               <div className="mb-4">
                 <label className="block mb-1">URL da Imagem</label>
-                <input type="text" name="imageUrl" value={currentProduct.imageUrl} onChange={handleChange} className="w-full border p-2 rounded" required />
+                <input type="text" name="imageUrl" value={currentProduct.imageUrl} onChange={handleChange} className="w-full border p-2 rounded focus:outline-none focus:ring-2 focus:ring-pink-400" required />
               </div>
               <div className="flex justify-end gap-4 mt-6">
                 <button type="button" onClick={closeModal} className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Cancelar</button>
-                <button type="submit" className="px-4 py-2 bg-fuchsia-500 text-white rounded hover:bg-fuchsia-600">Salvar</button>
+                <button type="submit" className="px-4 py-2 bg-pink-500 text-white rounded hover:bg-pink-600">Salvar</button>
               </div>
             </form>
           </div>

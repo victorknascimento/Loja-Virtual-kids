@@ -14,7 +14,7 @@ const AdminOrders = () => {
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-lg">
-      <h1 className="text-3xl font-bold text-fuchsia-700 mb-6">Pedidos Realizados</h1>
+      <h1 className="text-3xl font-bold text-pink-600 mb-6">Pedidos Realizados</h1>
       <div className="space-y-6">
         {orders.length === 0 ? (
           <p>Nenhum pedido foi realizado ainda.</p>
@@ -29,7 +29,7 @@ const AdminOrders = () => {
                 <p className="text-lg font-bold text-pink-600">Total: R$ {order.total.toFixed(2).replace('.', ',')}</p>
               </div>
               <div className="text-sm">
-                  <p><strong>Cliente:</strong> {order.customerName} ({order.customerEmail})</p>
+                  <p><strong>Cliente:</strong> {order.customerName} ({order.customerPhone})</p>
                   <p><strong>Endereço:</strong> {order.address.street}, {order.address.city} - {order.address.zip}</p>
               </div>
               <div className="mt-4">

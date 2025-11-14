@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { OPERATING_HOURS } from '../constants';
 
@@ -12,17 +11,15 @@ const StoreStatusBanner = ({ isOpen }: StoreStatusBannerProps) => {
 
   if (isOpen) {
     return (
-      <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6" role="alert">
-        <p className="font-bold">Loja Aberta!</p>
-        <p>Estamos prontos para receber seu pedido. {hoursText}</p>
+      <div className="bg-pink-100 text-pink-800 p-2 rounded-full text-center shadow-sm text-xs mb-8 max-w-lg mx-auto" role="alert">
+        <p><span className="font-bold">Loja Aberta!</span> Estamos prontos para receber seu pedido.</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6" role="alert">
-      <p className="font-bold">Loja Fechada</p>
-      <p>Nossos pedidos online estão encerrados por hoje. {hoursText}</p>
+    <div className="bg-red-100 text-red-800 p-2 rounded-full text-center shadow-sm text-xs mb-8 max-w-lg mx-auto" role="alert">
+       <p><span className="font-bold">Loja Fechada.</span> Nossos pedidos online estão encerrados por hoje. {hoursText}</p>
     </div>
   );
 };

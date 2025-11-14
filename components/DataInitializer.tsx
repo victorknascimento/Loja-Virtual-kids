@@ -13,11 +13,11 @@ export const DataInitializer = () => {
         {
           id: 'admin001',
           name: 'Admin',
-          email: 'admin@jujukids.com',
+          phone: '5585999195930',
           role: UserRole.ADMIN,
         }
       ]);
-      console.log('Admin user created: admin@jujukids.com (no password needed for this demo)');
+      console.log('Admin user created: 5585999195930 (no password needed)');
     }
 
     const products = getProducts();
