@@ -1,5 +1,5 @@
 {
-  "name": "Copy of Juju Kids E-Commerce",
-  "description": "A fully functional, responsive e-commerce website for a children's clothing store named 'Juju Kids'. It features separate customer and administrator roles, product management, a shopping cart, and a checkout process. The application simulates a database using local storage and includes business logic for operating hours.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [],
+  "name": "",
+  "description": ""
 }
