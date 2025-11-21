@@ -85,29 +85,14 @@ button, input, select, textarea {
     padding-top: 4px; 
 }
 
-/* Estilo da Imagem da Logo */
+/* Estilo da Imagem da Logo (SVG) */
 .logo-img {
-    height: 55px; /* Tamanho ajustado */
+    height: 55px; 
     width: auto;
     display: block;
-    
-    /* 
-       FILTRO PARA LOGO BRANCA:
-       Esta combinação de filtros pega uma logo comum (Fundo Branco + Texto Preto/Colorido)
-       e a transforma em uma logo transparente com texto branco (estilo silhueta).
-       
-       1. invert(1): Fundo Branco -> Preto. Texto Preto -> Branco.
-       2. grayscale(1): Remove cores para ficar uniforme (Branco puro).
-       3. brightness(2): Intensifica o branco.
-       4. mix-blend-mode: screen: Faz o Preto (fundo) desaparecer (ficar transparente).
-    */
-    filter: invert(1) grayscale(1) brightness(2);
-    mix-blend-mode: screen; 
-       
-    opacity: 1;
-    transition: transform 0.2s;
-    object-fit: contain;
     margin-left: -5px;
+    /* Filtros removidos: O SVG já é branco puro */
+    transition: transform 0.2s;
 }
 
 .logo-container:hover .logo-img {
