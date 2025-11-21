@@ -1,3 +1,288 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juju Kids - Moda Infantil</title>
+    
+    <!-- Google Fonts (Raleway) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header class="header">
+        <div class="container header-content">
+            <!-- Logo Ajustada -->
+            <a href="#" onclick="app.router('home'); return false;" class="logo-container">
+                <div style="display: flex; align-items: center;">
+                    <span style="font-family: 'Raleway', sans-serif; font-weight: 700; font-size: 1.8rem; letter-spacing: -1px; color: white; line-height: 1;">JUJUKIDS</span>
+                    <!-- Ícone de "Doce/Bala" (simulado com icon) posicionado à direita e inclinado -->
+                    <span class="material-icons" style="color: #fff; font-size: 1.8rem; margin-left: 8px; transform: rotate(20deg);">local_mall</span>
+                </div>
+                <span class="logo-subtitle">Moda Infantil</span>
+            </a>
+
+            <!-- Navegação e Status -->
+            <div class="header-right">
+                <!-- Status da Loja -->
+                <div id="store-status" class="header-status">
+                    <!-- Injetado via JS -->
+                </div>
+
+                <!-- Nav Links -->
+                <nav class="nav-links">
+                    <!-- Área do Usuário -->
+                    <div id="user-logged-in" class="hidden" style="display: flex; align-items: center; gap: 10px;">
+                        <span style="color: rgba(255,255,255,0.9); font-size: 0.9rem;">Olá, <span id="user-name-display" style="font-weight: 600;"></span></span>
+                        
+                        <!-- Link Admin (Só aparece se for admin) -->
+                        <a href="#" id="nav-admin" onclick="app.router('admin'); return false;" class="nav-icon-link hidden" title="Administração">
+                            <span class="material-icons">settings</span>
+                        </a>
+
+                        <a href="#" onclick="app.logout(); return false;" class="btn-outline-light">Sair</a>
+                    </div>
+
+                    <button id="btn-login-nav" class="btn-outline-light" onclick="app.router('login')">Entrar</button>
+
+                    <!-- Carrinho -->
+                    <a href="#" onclick="app.router('cart'); return false;" class="cart-icon-container">
+                        <span class="material-icons" style="font-size: 1.8rem;">shopping_cart</span>
+                        <span id="cart-count" class="cart-badge hidden">0</span>
+                    </a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="container main-content">
+        
+        <!-- VIEW: HOME -->
+        <div id="view-home" class="view">
+            <h2 style="margin-bottom: 1.5rem; font-weight: 300; color: var(--primary);">Destaques da Coleção</h2>
+            <div id="products-grid" class="products-grid">
+                <!-- Produtos renderizados via JS -->
+            </div>
+        </div>
+
+        <!-- VIEW: LOGIN -->
+        <div id="view-login" class="view hidden">
+            <div class="auth-card">
+                <h2 class="text-center" style="margin-bottom: 1.5rem;">Entrar</h2>
+                <div id="login-error" class="alert-error hidden"></div>
+                <form onsubmit="app.handleLogin(event)">
+                    <div class="form-group">
+                        <label>Celular (apenas números)</label>
+                        <input type="tel" id="login-phone" placeholder="Ex: 85999998888" required>
+                    </div>
+                    <button type="submit" class="btn-primary full-width">Acessar Loja</button>
+                </form>
+                <div class="auth-footer">
+                    Ainda não tem conta? <a href="#" onclick="app.router('register'); return false;">Cadastre-se</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW: REGISTER -->
+        <div id="view-register" class="view hidden">
+            <div class="auth-card">
+                <h2 class="text-center" style="margin-bottom: 1.5rem;">Criar Conta</h2>
+                <div id="register-error" class="alert-error hidden"></div>
+                <form onsubmit="app.handleRegister(event)">
+                    <div class="form-group">
+                        <label>Nome Completo</label>
+                        <input type="text" id="reg-name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Celular (WhatsApp)</label>
+                        <input type="tel" id="reg-phone" placeholder="Ex: 85999998888" required>
+                    </div>
+                    <button type="submit" class="btn-primary full-width">Cadastrar</button>
+                </form>
+                <div class="auth-footer">
+                    Já tem conta? <a href="#" onclick="app.router('login'); return false;">Entrar</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW: CART -->
+        <div id="view-cart" class="view hidden">
+            <h2 style="margin-bottom: 1.5rem;">Seu Carrinho</h2>
+            <div id="cart-items-container"></div>
+            
+            <div id="cart-summary" class="cart-summary hidden">
+                <h3 style="margin-bottom: 1rem;">Total: <span id="cart-total" style="color: var(--primary);">R$ 0,00</span></h3>
+                <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+                    <button class="btn-secondary" onclick="app.router('home')">Continuar Comprando</button>
+                    <button class="btn-primary" onclick="app.router('checkout')">Finalizar Pedido</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW: CHECKOUT -->
+        <div id="view-checkout" class="view hidden">
+            <h2 style="margin-bottom: 1.5rem;">Finalizar Pedido</h2>
+            <div class="checkout-grid">
+                <!-- Form Endereço -->
+                <div class="card">
+                    <h3 style="margin-bottom: 1rem;">Endereço de Entrega</h3>
+                    <form id="checkout-form" onsubmit="app.handleCheckout(event)">
+                        <div class="form-group">
+                            <label>Endereço (Rua, Número, Bairro)</label>
+                            <textarea id="addr-street" rows="2" required placeholder="Ex: Rua das Flores, 123 - Centro"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Cidade</label>
+                            <input type="text" id="addr-city" value="Fortaleza" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Ponto de Referência (Opcional)</label>
+                            <input type="text" id="addr-zip">
+                        </div>
+                        <button type="submit" class="btn-success full-width btn-primary" style="margin-top: 1rem;">
+                            Enviar Pedido via WhatsApp
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Resumo -->
+                <div class="card bg-gray">
+                    <h3 style="margin-bottom: 1rem;">Resumo do Pedido</h3>
+                    <div id="checkout-summary"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW: CONFIRMATION -->
+        <div id="view-confirmation" class="view hidden">
+            <div class="confirmation-card">
+                <div class="success-icon">
+                    <span class="material-icons" style="font-size: 4rem;">check_circle</span>
+                </div>
+                <h2>Pedido Realizado!</h2>
+                <div class="info-box">
+                    Seu pedido foi montado no WhatsApp. Clique em "Enviar" no aplicativo para concluir.
+                </div>
+                <p>Aguarde nossa confirmação para o pagamento e entrega.</p>
+                <button class="btn-primary mt-4" onclick="app.router('home')">Voltar para Loja</button>
+            </div>
+        </div>
+
+        <!-- VIEW: ADMIN -->
+        <div id="view-admin" class="view hidden">
+            <div class="flex-between" style="margin-bottom: 1rem;">
+                <h2>Painel Administrativo</h2>
+            </div>
+
+            <div class="admin-tabs">
+                <button class="btn-tab active" onclick="app.switchAdminTab('products')">Produtos</button>
+                <button class="btn-tab" onclick="app.switchAdminTab('orders')">Pedidos</button>
+                <button class="btn-tab" onclick="app.switchAdminTab('users')">Usuários</button>
+            </div>
+
+            <!-- Section: Products -->
+            <div id="admin-tab-products" class="admin-section">
+                <div style="text-align: right; margin-bottom: 1rem;">
+                    <button class="btn-primary" onclick="app.openProductModal()">+ Novo Produto</button>
+                </div>
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Imagem</th>
+                                <th>Nome</th>
+                                <th>Preço</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-products-list"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Section: Orders -->
+            <div id="admin-tab-orders" class="admin-section hidden">
+                <div id="admin-orders-list"></div>
+            </div>
+
+            <!-- Section: Users -->
+            <div id="admin-tab-users" class="admin-section hidden">
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Telefone</th>
+                                <th>Tipo</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-users-list"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- MODAL PRODUTO (ADMIN) -->
+    <div id="modal-product" class="modal hidden">
+        <div class="modal-content">
+            <h3>Gerenciar Produto</h3>
+            <form onsubmit="app.handleSaveProduct(event)">
+                <input type="hidden" id="prod-id">
+                <input type="hidden" id="prod-image-current">
+                
+                <div class="form-group">
+                    <label>Nome do Produto</label>
+                    <input type="text" id="prod-name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Categoria</label>
+                    <select id="prod-category" required>
+                        <option value="Meninas">Meninas</option>
+                        <option value="Meninos">Meninos</option>
+                        <option value="Bebês">Bebês</option>
+                        <option value="Calçados">Calçados</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Preço (R$)</label>
+                    <input type="number" id="prod-price" step="0.01" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Imagem do Produto</label>
+                    <input type="file" id="prod-image-file" accept="image/*">
+                    <div class="image-preview-container">
+                        <img id="prod-image-preview" class="image-preview" alt="Preview">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Descrição</label>
+                    <textarea id="prod-desc" rows="3"></textarea>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="document.getElementById('modal-product').classList.add('hidden')">Cancelar</button>
+                    <button type="submit" class="btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- FOOTER -->
     <footer class="footer">
         <div class="container text-center">
@@ -10,7 +295,7 @@
     <!-- Toast Notification -->
     <div id="toast" class="toast">Produto adicionado ao carrinho!</div>
 
-    <!-- Script (Uso de ./ para garantir caminho relativo) -->
+    <!-- Script -->
     <script src="./script.js"></script>
 </body>
 </html>
