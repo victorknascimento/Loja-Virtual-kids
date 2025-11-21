@@ -186,18 +186,22 @@ button, input, select, textarea {
 }
 
 /* Responsividade do Status */
-@media (max-width: 480px) {
+@media (max-width: 768px) {
     .status-text-label {
         display: none; 
     }
     .status-badge {
-        padding: 6px; /* Bola redonda no mobile */
-        width: 24px;
-        height: 24px;
+        padding: 0;
+        width: 28px; /* Círculo perfeito no mobile */
+        height: 28px;
         justify-content: center;
+        border-radius: 50%;
     }
     .status-dot {
         margin: 0;
+        /* Aumentar levemente a bolinha no mobile para visibilidade */
+        width: 10px;
+        height: 10px;
     }
 }
 
