@@ -1,7 +1,27 @@
 /**
- * JUJU KIDS - Vanilla JS Implementation
- * Lógica consolidada para rodar sem build tools
+ * WONDER KIDS - Integração com Firebase
+ * O código agora conecta a um banco de dados real.
  */
+
+// --- 1. CONFIGURAÇÃO DO FIREBASE (VOCÊ PRECISA COLAR SUAS CHAVES AQUI) ---
+// Siga as instruções fornecidas no chat para pegar essas chaves no console.firebase.google.com
+const firebaseConfig = {
+    apiKey: "SUA_API_KEY_AQUI",
+    authDomain: "SEU_PROJETO.firebaseapp.com",
+    projectId: "SEU_PROJECT_ID",
+    storageBucket: "SEU_PROJETO.appspot.com",
+    messagingSenderId: "SEU_SENDER_ID",
+    appId: "SEU_APP_ID"
+};
+
+// Inicializar Firebase (Verifica se já não foi inicializado para evitar erros)
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+} else {
+    firebase.app(); // se já existe, usa o padrão
+}
+
+const db = firebase.firestore();
 
 // --- CONSTANTES ---
 const CONSTANTS = {
@@ -9,19 +29,7 @@ const CONSTANTS = {
     OPERATING_HOURS: {
         morning: { start: 8, end: 12 },
         afternoon: { start: 14, end: 18 },
-    },
-    // ATENÇÃO: Para atualizar os produtos para TODOS os clientes,
-    // você deve alterar esta lista abaixo manualmente ou usar o gerador no Admin.
-    INITIAL_PRODUCTS: [
-        { id: '1', name: 'Conjunto Verão Menina', description: '100% algodão.', price: 89.90, imageUrl: 'https://picsum.photos/seed/prod1/400/400', category: 'Meninas' },
-        { id: '2', name: 'Vestido Floral Infantil', description: 'Vestido rodado.', price: 129.90, imageUrl: 'https://picsum.photos/seed/prod2/400/400', category: 'Meninas' },
-        { id: '3', name: 'Camiseta Dinossauro', description: 'Brilha no escuro.', price: 59.90, imageUrl: 'https://picsum.photos/seed/prod3/400/400', category: 'Meninos' },
-        { id: '4', name: 'Bermuda Jeans', description: 'Lavagem moderna.', price: 79.90, imageUrl: 'https://picsum.photos/seed/prod4/400/400', category: 'Meninos' },
-        { id: '5', name: 'Macacão Bebê', description: 'Malha suave.', price: 69.90, imageUrl: 'https://picsum.photos/seed/prod5/400/400', category: 'Bebês' },
-        { id: '6', name: 'Sandália Colorida', description: 'Divertida.', price: 49.90, imageUrl: 'https://picsum.photos/seed/prod6/400/400', category: 'Calçados' },
-        { id: '7', name: 'Conjunto Moletom', description: 'Flanelado.', price: 149.90, imageUrl: 'https://picsum.photos/seed/prod7/400/400', category: 'Meninos' },
-        { id: '8', name: 'Legging Unicórnio', description: 'Confortável.', price: 45.90, imageUrl: 'https://picsum.photos/seed/prod8/400/400', category: 'Meninas' }
-    ]
+    }
 };
 
 // --- ESTADO DA APLICAÇÃO ---
@@ -34,7 +42,7 @@ const state = {
     isStoreOpen: false
 };
 
-// --- SERVIÇOS LOCAL STORAGE ---
+// --- SERVIÇOS LOCAL STORAGE (Apenas para Carrinho e Sessão local) ---
 const Storage = {
     get: (key, def) => {
         const val = localStorage.getItem(key);
@@ -45,7 +53,6 @@ const Storage = {
 
 // --- UTILITÁRIOS ---
 const Utils = {
-    // Converte arquivo para Base64
     fileToBase64: (file) => {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -59,27 +66,49 @@ const Utils = {
 // --- LÓGICA PRINCIPAL ---
 const app = {
     init: () => {
-        // Carregar dados
+        // 1. Ouvinte em Tempo Real do Banco de Dados (Produtos)
+        // Isso substitui o LocalStorage. Sempre que mudar no banco, muda aqui.
+        db.collection("products").onSnapshot((querySnapshot) => {
+            state.products = [];
+            querySnapshot.forEach((doc) => {
+                state.products.push({ id: doc.id, ...doc.data() });
+            });
+            
+            // Remove loading e renderiza
+            const loadingEl = document.getElementById('loading-products');
+            if(loadingEl) loadingEl.style.display = 'none';
+            
+            app.renderHome();
+            // Se estiver no admin, atualiza tabela também
+            if(!document.getElementById('view-admin').classList.contains('hidden')) {
+                app.renderAdminProducts();
+            }
+        }, (error) => {
+            console.error("Erro ao conectar banco:", error);
+            // Fallback se as chaves estiverem erradas
+            alert("Atenção: Configure as chaves do Firebase no arquivo script.js para que o banco funcione.");
+        });
+
+        // 2. Ouvinte de Pedidos (Opcional - só para admin ver chegando)
+        db.collection("orders").onSnapshot((querySnapshot) => {
+            state.orders = [];
+            querySnapshot.forEach((doc) => {
+                state.orders.push({ id: doc.id, ...doc.data() });
+            });
+            if(!document.getElementById('view-admin').classList.contains('hidden')) {
+                app.renderAdminOrders();
+            }
+        });
+
+        // Carregar Usuários Locais (Ainda vamos usar LocalStorage para User Auth simplificado por enquanto)
         state.users = Storage.get('users', []);
         if (state.users.length === 0) {
             state.users.push({ id: 'admin001', name: 'Admin', phone: '5585999195930', role: 'ADMIN' });
             Storage.set('users', state.users);
         }
 
-        // Carrega produtos. Se o LocalStorage estiver vazio ou diferente do código, prioriza o código para garantir consistência em updates
-        // Mas permite edições locais.
-        const storedProducts = Storage.get('products', []);
-        if (storedProducts.length === 0) {
-            state.products = CONSTANTS.INITIAL_PRODUCTS;
-            Storage.set('products', state.products);
-        } else {
-            state.products = storedProducts;
-        }
-
+        // Recuperar Sessão e Carrinho local
         state.cart = Storage.get('cart', []);
-        state.orders = Storage.get('orders', []);
-
-        // Verificar sessão
         const sessionUser = sessionStorage.getItem('currentUser');
         if (sessionUser) {
             state.currentUser = JSON.parse(sessionUser);
@@ -94,12 +123,10 @@ const app = {
         app.router('home');
     },
 
-    // --- ROTEAMENTO SIMPLES ---
+    // --- ROTEAMENTO ---
     router: (viewName) => {
-        // Esconder todas as views
         document.querySelectorAll('.view').forEach(el => el.classList.add('hidden'));
         
-        // Proteção de rotas
         if ((viewName === 'checkout' || viewName === 'admin') && !state.currentUser) {
             return app.router('login');
         }
@@ -107,14 +134,12 @@ const app = {
             return app.router('home');
         }
 
-        // Mostrar view atual
         const target = document.getElementById(`view-${viewName}`);
         if (target) {
             target.classList.remove('hidden');
             window.scrollTo(0, 0);
         }
 
-        // Lógica específica da view ao carregar
         if (viewName === 'home') app.renderHome();
         if (viewName === 'cart') app.renderCart();
         if (viewName === 'checkout') app.renderCheckout();
@@ -128,27 +153,19 @@ const app = {
         const now = new Date();
         const hour = now.getHours();
         const { morning, afternoon } = CONSTANTS.OPERATING_HOURS;
-        
-        // Atualiza apenas o estado interno
         state.isStoreOpen = (hour >= morning.start && hour < morning.end) || 
                            (hour >= afternoon.start && hour < afternoon.end);
     },
 
-    // --- NOTIFICAÇÃO TOAST ---
     showToast: (message) => {
         const toast = document.getElementById('toast');
         if (!toast) return;
-
         toast.innerText = message;
         toast.classList.add('show');
-
-        // Remove após 3 segundos
-        setTimeout(() => {
-            toast.classList.remove('show');
-        }, 3000);
+        setTimeout(() => toast.classList.remove('show'), 3000);
     },
 
-    // --- AUTH ---
+    // --- AUTH (Mantido Local por simplicidade da migração) ---
     handleLogin: (e) => {
         e.preventDefault();
         const phone = document.getElementById('login-phone').value;
@@ -160,9 +177,8 @@ const app = {
             app.updateHeader();
             app.router('home');
         } else {
-            const err = document.getElementById('login-error');
-            err.innerText = 'Telefone não encontrado.';
-            err.classList.remove('hidden');
+            document.getElementById('login-error').innerText = 'Telefone não encontrado.';
+            document.getElementById('login-error').classList.remove('hidden');
         }
     },
 
@@ -216,24 +232,29 @@ const app = {
             navAdmin.classList.add('hidden');
         }
 
-        // Atualizar Carrinho
         const totalItems = state.cart.reduce((acc, item) => acc + item.quantity, 0);
         cartCount.innerText = totalItems;
         if (totalItems > 0) cartCount.classList.remove('hidden');
         else cartCount.classList.add('hidden');
     },
 
-    // --- HOME & PRODUTOS ---
+    // --- RENDERIZAÇÃO PRODUTOS ---
     renderHome: () => {
         const grid = document.getElementById('products-grid');
         
+        if (state.products.length === 0) {
+            // Se estiver vazio e não carregando, pode não ter produtos no banco ainda
+            grid.innerHTML = '<p style="text-align:center; grid-column: 1/-1;">Nenhum produto cadastrado ainda.</p>';
+            return;
+        }
+
         grid.innerHTML = state.products.map(p => `
             <div class="product-card">
                 <img src="${p.imageUrl}" alt="${p.name}" loading="lazy">
                 <div class="card-body">
                     <h3>${p.name}</h3>
                     <div class="card-footer">
-                        <span class="price">R$ ${p.price.toFixed(2).replace('.', ',')}</span>
+                        <span class="price">R$ ${parseFloat(p.price).toFixed(2).replace('.', ',')}</span>
                         <button class="btn-primary" onclick="app.addToCart('${p.id}')">
                             Adicionar
                         </button>
@@ -250,14 +271,16 @@ const app = {
             alert(`A LOJA ESTÁ FECHADA AGORA!\n\nAtendimento:\n${morning.start}h às ${morning.end}h\n${afternoon.start}h às ${afternoon.end}h\n\nAguardamos você!`);
         }
 
-        // Permite adicionar mesmo fechado, mas avisa
         const product = state.products.find(p => p.id === id);
+        if(!product) return;
+
         const existing = state.cart.find(item => item.id === id);
         
         if (existing) {
             existing.quantity++;
         } else {
-            state.cart.push({ ...product, quantity: 1 });
+            // Garante que o preço seja número
+            state.cart.push({ ...product, price: parseFloat(product.price), quantity: 1 });
         }
         
         Storage.set('cart', state.cart);
@@ -301,10 +324,8 @@ const app = {
     updateCartQty: (id, qty) => {
         const val = parseInt(qty);
         if (val < 1) return app.removeFromCart(id);
-        
         const item = state.cart.find(i => i.id === id);
         if (item) item.quantity = val;
-        
         Storage.set('cart', state.cart);
         app.renderCart();
         app.updateHeader();
@@ -321,7 +342,6 @@ const app = {
     renderCheckout: () => {
         const summaryDiv = document.getElementById('checkout-summary');
         const total = state.cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-        
         summaryDiv.innerHTML = state.cart.map(item => `
             <div class="flex-between" style="margin-bottom:0.5rem; font-size:0.9rem;">
                 <span>${item.quantity}x ${item.name}</span>
@@ -331,37 +351,37 @@ const app = {
         <div class="flex-between" style="border-top:1px solid #ccc; margin-top:1rem; padding-top:1rem; font-weight:bold;">
             <span>Total</span>
             <span>R$ ${total.toFixed(2).replace('.', ',')}</span>
-        </div>
-        `;
+        </div>`;
     },
 
-    handleCheckout: (e) => {
+    handleCheckout: async (e) => {
         e.preventDefault();
         const street = document.getElementById('addr-street').value;
         const city = document.getElementById('addr-city').value;
-        const zip = document.getElementById('addr-zip').value;
         const total = state.cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
 
-        // Salvar pedido
         const order = {
-            id: Date.now().toString(),
             userId: state.currentUser.id,
             customerName: state.currentUser.name,
             customerPhone: state.currentUser.phone,
-            items: [...state.cart],
+            items: state.cart,
             total,
-            address: { street, city, zip },
+            address: { street, city },
             timestamp: new Date().toISOString()
         };
-        state.orders.push(order);
-        Storage.set('orders', state.orders);
+
+        // Salvar pedido no Banco de Dados
+        try {
+            await db.collection("orders").add(order);
+        } catch(err) {
+            console.error("Erro ao salvar pedido no banco", err);
+        }
 
         // WhatsApp Link
         const itemsText = state.cart.map(i => `${i.quantity}x ${i.name}`).join('%0A');
         const msg = `Olá! Novo pedido:%0A%0A${itemsText}%0A%0ATotal: R$ ${total.toFixed(2)}%0A%0AEntregar em:%0A${street}, ${city}%0A%0ACliente: ${state.currentUser.name}`;
         window.open(`https://wa.me/${CONSTANTS.STORE_PHONE}?text=${msg}`, '_blank');
 
-        // Limpar e Redirecionar
         state.cart = [];
         Storage.set('cart', []);
         app.updateHeader();
@@ -372,19 +392,11 @@ const app = {
     switchAdminTab: (tab) => {
         document.querySelectorAll('.admin-section').forEach(el => el.classList.add('hidden'));
         document.querySelectorAll('.btn-tab').forEach(el => el.classList.remove('active'));
-        
         document.getElementById(`admin-tab-${tab}`).classList.remove('hidden');
-        
         const buttons = document.querySelectorAll('.btn-tab');
         if(tab === 'products') buttons[0].classList.add('active');
-        if(tab === 'orders') {
-            buttons[1].classList.add('active');
-            app.renderAdminOrders();
-        }
-        if(tab === 'users') {
-            buttons[2].classList.add('active');
-            app.renderAdminUsers();
-        }
+        if(tab === 'orders') { buttons[1].classList.add('active'); app.renderAdminOrders(); }
+        if(tab === 'users') { buttons[2].classList.add('active'); app.renderAdminUsers(); }
         if(tab === 'reports') buttons[3].classList.add('active');
     },
 
@@ -394,7 +406,7 @@ const app = {
             <tr>
                 <td><img src="${p.imageUrl}" alt="img"></td>
                 <td>${p.name}</td>
-                <td>R$ ${p.price.toFixed(2)}</td>
+                <td>R$ ${parseFloat(p.price).toFixed(2)}</td>
                 <td>
                     <button class="btn-text-light" style="color:blue;" onclick="app.editProduct('${p.id}')">Editar</button>
                     <button class="btn-text-light" style="color:red;" onclick="app.deleteProduct('${p.id}')">Excluir</button>
@@ -407,11 +419,9 @@ const app = {
         const modal = document.getElementById('modal-product');
         modal.classList.remove('hidden');
         const preview = document.getElementById('prod-image-preview');
-        const fileInput = document.getElementById('prod-image-file');
-        const urlInput = document.getElementById('prod-image-url');
         
-        fileInput.value = '';
-        urlInput.value = '';
+        document.getElementById('prod-image-file').value = '';
+        document.getElementById('prod-image-url').value = '';
 
         if (product) {
             document.getElementById('prod-id').value = product.id;
@@ -419,11 +429,9 @@ const app = {
             document.getElementById('prod-category').value = product.category;
             document.getElementById('prod-price').value = product.price;
             document.getElementById('prod-desc').value = product.description;
-            
             document.getElementById('prod-image-current').value = product.imageUrl;
-            if (product.imageUrl.startsWith('http')) {
-                urlInput.value = product.imageUrl;
-            }
+            
+            if (product.imageUrl.startsWith('http')) document.getElementById('prod-image-url').value = product.imageUrl;
             preview.src = product.imageUrl;
             preview.classList.add('visible');
         } else {
@@ -444,17 +452,14 @@ const app = {
         const fileInput = document.getElementById('prod-image-file');
         const urlInput = document.getElementById('prod-image-url');
         let finalImageUrl = document.getElementById('prod-image-current').value;
-        let isLocalFile = false;
 
         if (urlInput.value && urlInput.value.trim() !== '') {
              finalImageUrl = urlInput.value.trim();
         } else if (fileInput.files && fileInput.files[0]) {
             try {
                 finalImageUrl = await Utils.fileToBase64(fileInput.files[0]);
-                isLocalFile = true;
             } catch (err) {
-                alert('Erro ao processar arquivo');
-                return;
+                alert('Erro ao processar arquivo'); return;
             }
         } else if (!finalImageUrl) {
             finalImageUrl = 'https://via.placeholder.com/400';
@@ -468,32 +473,22 @@ const app = {
             description: document.getElementById('prod-desc').value,
         };
 
-        if (id) {
-            const index = state.products.findIndex(p => p.id === id);
-            if (index > -1) state.products[index] = { ...prodData, id };
-        } else {
-            state.products.push({ ...prodData, id: Date.now().toString() });
+        // --- SALVAR NO FIREBASE ---
+        try {
+            if (id) {
+                // Atualizar
+                await db.collection("products").doc(id).update(prodData);
+            } else {
+                // Criar Novo
+                await db.collection("products").add(prodData);
+            }
+            document.getElementById('modal-product').classList.add('hidden');
+            app.showToast("Produto salvo no Banco de Dados!");
+            // Não precisa chamar renderAdminProducts(), o "onSnapshot" fará isso automaticamente
+        } catch (error) {
+            console.error("Erro ao salvar:", error);
+            alert("Erro ao salvar. Verifique se copiou as chaves do Firebase corretamente no script.js");
         }
-
-        // Salvar localmente
-        Storage.set('products', state.products);
-        document.getElementById('modal-product').classList.add('hidden');
-        app.renderAdminProducts();
-        if (document.getElementById('view-home').style.display !== 'none') app.renderHome();
-
-        // ----------------------------------------------------
-        // CRÍTICO: Explicar ao usuário que ele precisa atualizar o código
-        // ----------------------------------------------------
-        if (isLocalFile) {
-            alert("ATENÇÃO: Você usou uma imagem do celular (arquivo). O código gerado será GIGANTE. \n\nRecomendamos usar links da internet (URL) para que o site fique leve e fácil de atualizar.");
-        }
-
-        app.showToast("Produto Salvo Localmente!");
-        
-        setTimeout(() => {
-            alert("IMPORTANTE: Para que seus clientes vejam as mudanças, você precisa copiar o CÓDIGO NOVO e atualizar o site. \n\nVou gerar o código agora!");
-            app.generateUpdateCode();
-        }, 500);
     },
 
     editProduct: (id) => {
@@ -501,39 +496,16 @@ const app = {
         if(p) app.openProductModal(p);
     },
 
-    deleteProduct: (id) => {
+    deleteProduct: async (id) => {
         if(confirm('Excluir este produto?')) {
-            state.products = state.products.filter(p => p.id !== id);
-            Storage.set('products', state.products);
-            app.renderAdminProducts();
-            
-            setTimeout(() => {
-                alert("IMPORTANTE: Para remover o produto para os clientes, gere o código e atualize o site.");
-                app.generateUpdateCode();
-            }, 500);
+            try {
+                await db.collection("products").doc(id).delete();
+                app.showToast("Produto removido.");
+            } catch (error) {
+                console.error("Erro ao deletar:", error);
+                alert("Erro ao deletar.");
+            }
         }
-    },
-
-    // --- GERAÇÃO DE CÓDIGO PARA ATUALIZAÇÃO ---
-    generateUpdateCode: () => {
-        const currentProducts = Storage.get('products', CONSTANTS.INITIAL_PRODUCTS);
-        
-        const productsString = JSON.stringify(currentProducts, null, 4);
-        
-        const codeBlock = `
-// CÓDIGO DE ATUALIZAÇÃO - Juju Kids
-// 1. Abra o arquivo "script.js"
-// 2. Procure onde diz "INITIAL_PRODUCTS"
-// 3. APAGUE tudo que estiver dentro dos colchetes [ ... ] do INITIAL_PRODUCTS e cole o código abaixo.
-// OU simplesmente substitua a constante inteira por:
-
-INITIAL_PRODUCTS: ${productsString}
-        `;
-
-        const txtArea = document.getElementById('generated-code-area');
-        txtArea.value = codeBlock.trim();
-        
-        document.getElementById('modal-code').classList.remove('hidden');
     },
 
     renderAdminOrders: () => {
@@ -542,12 +514,13 @@ INITIAL_PRODUCTS: ${productsString}
             container.innerHTML = '<p>Sem pedidos.</p>';
             return;
         }
+        // Ordenar por data
         const sorted = [...state.orders].sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
         
         container.innerHTML = sorted.map(o => `
             <div class="card" style="margin-bottom:1rem;">
                 <div class="flex-between">
-                    <strong>Pedido #${o.id}</strong>
+                    <strong>Pedido via App</strong>
                     <strong>R$ ${o.total.toFixed(2)}</strong>
                 </div>
                 <small>${new Date(o.timestamp).toLocaleString()}</small>
@@ -574,17 +547,13 @@ INITIAL_PRODUCTS: ${productsString}
     exportUsersToExcel: () => {
         const headers = ['Nome', 'Telefone', 'Perfil', 'ID'];
         const rows = state.users.map(u => [u.name, u.phone, u.role, u.id]);
-
         let csvContent = '\uFEFF' + headers.join(';') + '\n';
-        rows.forEach(row => {
-            csvContent += row.join(';') + '\n';
-        });
-
+        rows.forEach(row => { csvContent += row.join(';') + '\n'; });
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.setAttribute('href', url);
-        link.setAttribute('download', `clientes_jujukids_${new Date().toISOString().slice(0,10)}.csv`);
+        link.setAttribute('download', `clientes_jujukids.csv`);
         link.style.visibility = 'hidden';
         document.body.appendChild(link);
         link.click();

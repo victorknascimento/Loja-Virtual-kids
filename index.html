@@ -15,6 +15,11 @@
 
     <!-- Styles -->
     <link rel="stylesheet" href="./style.css">
+
+    <!-- FIREBASE SDKs (Banco de Dados em Tempo Real) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 </head>
 <body>
 
@@ -66,6 +71,11 @@
         <!-- VIEW: HOME -->
         <div id="view-home" class="view">
             <h2 style="margin-bottom: 1.5rem; font-weight: 300; color: var(--primary);">Destaques da Coleção</h2>
+            <!-- Loading indicator -->
+            <div id="loading-products" class="text-center" style="padding: 2rem;">
+                <span class="material-icons" style="font-size: 3rem; color: #ccc; animation: spin 1s linear infinite;">autorenew</span>
+                <p>Carregando produtos...</p>
+            </div>
             <div id="products-grid" class="products-grid">
                 <!-- Produtos renderizados via JS -->
             </div>
@@ -178,6 +188,10 @@
         <div id="view-admin" class="view hidden">
             <div class="flex-between" style="margin-bottom: 1rem;">
                 <h2>Painel Administrativo</h2>
+                <span style="font-size: 0.8rem; background: #e0f2fe; color: #0284c7; padding: 5px 10px; border-radius: 20px;">
+                    <span class="material-icons" style="font-size: 14px; vertical-align: middle;">cloud_done</span> 
+                    Sincronizado na Nuvem
+                </span>
             </div>
 
             <div class="admin-tabs">
@@ -191,7 +205,6 @@
             <div id="admin-tab-products" class="admin-section">
                 <div style="text-align: right; margin-bottom: 1rem;">
                     <button class="btn-primary" onclick="app.openProductModal()">+ Novo Produto</button>
-                    <button class="btn-secondary" style="margin-left: 10px;" onclick="app.generateUpdateCode()">Obter Código Atualizado</button>
                 </div>
                 <div class="table-responsive">
                     <table class="data-table">
@@ -291,7 +304,7 @@
                     <div class="image-preview-container">
                         <img id="prod-image-preview" class="image-preview" alt="Preview">
                     </div>
-                    <small style="color: red; font-size: 0.8rem;">Atenção: Imagens do seu celular deixam o código GIGANTE.</small>
+                    <small style="color: red; font-size: 0.8rem;">Atenção: Imagens do seu celular deixam o carregamento mais lento.</small>
                 </div>
 
                 <div class="form-group">
@@ -301,28 +314,9 @@
 
                 <div class="modal-actions">
                     <button type="button" class="btn-secondary" onclick="document.getElementById('modal-product').classList.add('hidden')">Cancelar</button>
-                    <button type="submit" class="btn-primary">Salvar e Gerar Código</button>
+                    <button type="submit" class="btn-primary">Salvar no Banco de Dados</button>
                 </div>
             </form>
-        </div>
-    </div>
-
-    <!-- MODAL CÓDIGO GERADO -->
-    <div id="modal-code" class="modal hidden">
-        <div class="modal-content">
-            <h3 style="color: var(--primary);">⚠️ Passo Obrigatório!</h3>
-            <p style="font-size: 0.9rem; color: #333; margin-bottom: 1rem; font-weight: 500;">
-                O site não salva sozinho na internet. Para que seus clientes vejam as mudanças, você precisa:
-            </p>
-            <ol style="font-size: 0.9rem; margin-bottom: 1rem; padding-left: 1.2rem; color: #555;">
-                <li>Copiar o código abaixo.</li>
-                <li>Abrir o arquivo <strong>script.js</strong> no seu computador.</li>
-                <li>Colar e substituir a parte dos produtos.</li>
-            </ol>
-            <textarea id="generated-code-area" rows="10" style="width: 100%; font-family: monospace; font-size: 0.8rem; padding: 10px; border: 2px solid var(--primary);" readonly></textarea>
-            <div class="modal-actions">
-                <button class="btn-primary" onclick="document.getElementById('modal-code').classList.add('hidden')">Entendi, copiei!</button>
-            </div>
         </div>
     </div>
 
@@ -330,13 +324,17 @@
     <footer class="footer">
         <div class="container text-center">
             <h3>Wonder Kids - Moda Infantil</h3>
-            <p>Rua Imaginária, 000 - Cidade Modelo</p>
+            <p>Rua Maria Júlia, 676 - Bom jardim, Fortaleza</p>
             <p class="copyright">© 2025 Wonder Kids</p>
         </div>
     </footer>
 
     <!-- Toast Notification -->
     <div id="toast" class="toast">Produto adicionado ao carrinho!</div>
+
+    <style>
+        @keyframes spin { 100% { -webkit-transform: rotate(360deg); transform:rotate(360deg); } }
+    </style>
 
     <!-- Script -->
     <script src="./script.js"></script>
