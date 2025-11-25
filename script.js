@@ -1,35 +1,16 @@
 /**
- * WONDER KIDS - Integração Híbrida (Demo + LocalStorage + Firebase)
+ * WONDER KIDS - Script Principal
+ * Focado em apresentação (Demo Mode)
  */
-
-// --- 1. CONFIGURAÇÃO DO FIREBASE ---
-const firebaseConfig = {
-    apiKey: "SUA_API_KEY_AQUI", 
-    authDomain: "wonder-kids.firebaseapp.com",
-    projectId: "wonder-kids",
-    storageBucket: "wonder-kids.appspot.com",
-    messagingSenderId: "00000000000",
-    appId: "1:00000000000:web:0000000000000"
-};
-
-// Verifica se está configurado
-const isFirebaseConfigured = firebaseConfig.apiKey !== "SUA_API_KEY_AQUI";
-
-// Inicializar Firebase apenas se configurado
-let db = null;
-if (isFirebaseConfigured && typeof firebase !== 'undefined') {
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    else firebase.app();
-    db = firebase.firestore();
-}
 
 // --- CONSTANTES ---
 const CONSTANTS = {
-    STORE_PHONE: "5585999195930", // Seu número
+    STORE_PHONE: "5585999195930", // Seu número para receber pedidos
     OPERATING_HOURS: {
         morning: { start: 8, end: 12 },
         afternoon: { start: 14, end: 18 },
     },
+    // Imagem padrão caso alguma falhe
     PLACEHOLDER_IMG: "https://images.unsplash.com/photo-1519241047957-be31d7379a5d?q=80&w=800&auto=format&fit=crop"
 };
 
@@ -38,7 +19,13 @@ const Storage = {
     get: (key, def) => {
         try {
             const val = localStorage.getItem(key);
-            return val ? JSON.parse(val) : def;
+            // Se existir mas for array vazio, considera como não existente para carregar o demo
+            if (val) {
+                const parsed = JSON.parse(val);
+                if (Array.isArray(parsed) && parsed.length === 0) return def;
+                return parsed;
+            }
+            return def;
         } catch (e) { return def; }
     },
     set: (key, val) => localStorage.setItem(key, JSON.stringify(val)),
@@ -54,55 +41,71 @@ const state = {
     isStoreOpen: true 
 };
 
-// --- PRODUTOS DE DEMONSTRAÇÃO (Para LinkedIn/Portfólio) ---
+// --- CATÁLOGO WONDER KIDS (Produtos Fixos para Apresentação) ---
 const DEMO_PRODUCTS = [
     {
-        id: 'demo_1',
-        name: 'Vestido Floral de Verão',
+        id: 'wk_001',
+        name: 'Vestido Floral Primavera',
         category: 'Meninas',
         price: 89.90,
-        imageUrl: 'https://images.unsplash.com/photo-1621452773781-0f992ee6191a?q=80&w=800&auto=format&fit=crop',
-        description: 'Vestido leve e confortável para os dias quentes.'
+        imageUrl: 'https://images.unsplash.com/photo-1621452773781-0f992ee6191a?q=80&w=600&auto=format&fit=crop',
+        description: 'Vestido leve com estampa floral, ideal para passeios ao ar livre.'
     },
     {
-        id: 'demo_2',
-        name: 'Conjunto Aventura Dino',
+        id: 'wk_002',
+        name: 'Conjunto Dino Explorer',
         category: 'Meninos',
         price: 65.50,
-        imageUrl: 'https://images.unsplash.com/photo-1519238263496-6362d74c1123?q=80&w=800&auto=format&fit=crop',
-        description: 'Camiseta e bermuda temáticos.'
+        imageUrl: 'https://images.unsplash.com/photo-1519238263496-6362d74c1123?q=80&w=600&auto=format&fit=crop',
+        description: 'Camiseta e bermuda confortáveis para pequenas aventuras.'
     },
     {
-        id: 'demo_3',
+        id: 'wk_003',
         name: 'Jaqueta Jeans Kids',
         category: 'Meninas',
         price: 120.00,
-        imageUrl: 'https://images.unsplash.com/photo-1604467794349-0b74285de7e7?q=80&w=800&auto=format&fit=crop',
-        description: 'Estilo e proteção contra o vento.'
+        imageUrl: 'https://images.unsplash.com/photo-1604467794349-0b74285de7e7?q=80&w=600&auto=format&fit=crop',
+        description: 'Estilo clássico e proteção contra o vento.'
     },
     {
-        id: 'demo_4',
-        name: 'Tênis Colorido Confort',
+        id: 'wk_004',
+        name: 'Tênis Color Confort',
         category: 'Calçados',
         price: 99.90,
-        imageUrl: 'https://images.unsplash.com/photo-1514989940723-e8875ea6ab7d?q=80&w=800&auto=format&fit=crop',
-        description: 'Ideal para brincar o dia todo.'
+        imageUrl: 'https://images.unsplash.com/photo-1514989940723-e8875ea6ab7d?q=80&w=600&auto=format&fit=crop',
+        description: 'Solado macio para brincar o dia todo sem cansar.'
     },
     {
-        id: 'demo_5',
-        name: 'Macacão Bebê Urso',
+        id: 'wk_005',
+        name: 'Macacão Ursinho Polar',
         category: 'Bebês',
         price: 75.00,
-        imageUrl: 'https://images.unsplash.com/photo-1522771930-78848d9293e8?q=80&w=800&auto=format&fit=crop',
-        description: 'Tecido 100% algodão hipoalergênico.'
+        imageUrl: 'https://images.unsplash.com/photo-1522771930-78848d9293e8?q=80&w=600&auto=format&fit=crop',
+        description: 'Tecido 100% algodão hipoalergênico, super fofo.'
     },
     {
-        id: 'demo_6',
-        name: 'Boné Estilo Urbano',
+        id: 'wk_006',
+        name: 'Boné Street Style',
         category: 'Meninos',
         price: 35.00,
-        imageUrl: 'https://images.unsplash.com/photo-1544778393-010e9f02377b?q=80&w=800&auto=format&fit=crop',
-        description: 'Proteção solar com muito estilo.'
+        imageUrl: 'https://images.unsplash.com/photo-1544778393-010e9f02377b?q=80&w=600&auto=format&fit=crop',
+        description: 'Proteção solar com muito estilo urbano.'
+    },
+    {
+        id: 'wk_007',
+        name: 'Sapatilha Bailarina',
+        category: 'Calçados',
+        price: 55.90,
+        imageUrl: 'https://images.unsplash.com/photo-1560769629-975ec94e6a86?q=80&w=600&auto=format&fit=crop',
+        description: 'Delicadeza e brilho para ocasiões especiais.'
+    },
+    {
+        id: 'wk_008',
+        name: 'Camisa Polo Listrada',
+        category: 'Meninos',
+        price: 49.90,
+        imageUrl: 'https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?q=80&w=600&auto=format&fit=crop',
+        description: 'Elegância casual para festas de aniversário.'
     }
 ];
 
@@ -112,6 +115,7 @@ const app = {
         // Carregar Usuários Locais
         state.users = Storage.get('users', []);
         if (state.users.length === 0) {
+            // Cria o admin padrão se não existir
             state.users.push({ id: 'admin001', name: 'Admin', phone: '5585999195930', role: 'ADMIN' });
             Storage.set('users', state.users);
         }
@@ -123,7 +127,7 @@ const app = {
             state.currentUser = JSON.parse(sessionUser);
         }
 
-        // Carregar produtos
+        // Carregar produtos (Lógica Blindada para Demo)
         app.loadProducts();
 
         // Verificar horário
@@ -138,51 +142,36 @@ const app = {
     loadProducts: () => {
         const loadingEl = document.getElementById('loading-products');
         
-        // 1. Prioridade: Se Firebase estiver configurado E funcionando
-        if (isFirebaseConfigured && db) {
-            db.collection("products").onSnapshot((querySnapshot) => {
-                state.products = [];
-                querySnapshot.forEach((doc) => {
-                    state.products.push({ id: doc.id, ...doc.data() });
-                });
-                if (state.products.length === 0) state.products = DEMO_PRODUCTS;
-                
-                if(loadingEl) loadingEl.style.display = 'none';
-                app.renderHome();
-                if(!document.getElementById('view-admin').classList.contains('hidden')) app.renderAdminProducts();
-            }, (error) => {
-                console.error("Erro Firebase, fallback local:", error);
-                app.loadLocalOrDemo(loadingEl);
-            });
-        } else {
-            // 2. Fallback: LocalStorage ou Demo
-            app.loadLocalOrDemo(loadingEl);
-        }
-    },
-
-    loadLocalOrDemo: (loadingEl) => {
-        // Tenta pegar do LocalStorage primeiro (para salvar edições do admin)
-        const localProducts = Storage.get('products', null);
+        // Tenta pegar do LocalStorage primeiro (caso você tenha editado no seu celular)
+        // Se retornar null ou vazio, usa o DEMO_PRODUCTS
+        let localProducts = Storage.get('products', null);
         
         if (localProducts && localProducts.length > 0) {
-            console.log("Carregando produtos salvos localmente.");
+            console.log("Carregando produtos personalizados.");
             state.products = localProducts;
         } else {
-            console.log("Nenhum produto salvo. Carregando Demo.");
+            console.log("Iniciando Modo Demonstração (Catálogo Padrão).");
             state.products = DEMO_PRODUCTS;
-            // Salva o demo no localstorage para permitir edições futuras
+            // Salva o demo no localstorage para garantir que não fique vazio na próxima
             Storage.set('products', DEMO_PRODUCTS);
         }
 
         if(loadingEl) loadingEl.style.display = 'none';
         app.renderHome();
-        if(!document.getElementById('view-admin').classList.contains('hidden')) app.renderAdminProducts();
+        
+        // Se estiver na tela de admin, atualiza a tabela também
+        const adminView = document.getElementById('view-admin');
+        if(adminView && !adminView.classList.contains('hidden')) {
+            app.renderAdminProducts();
+        }
     },
 
     // --- ROTEAMENTO ---
     router: (viewName) => {
+        // Esconde todas as views
         document.querySelectorAll('.view').forEach(el => el.classList.add('hidden'));
         
+        // Proteção de rotas
         if ((viewName === 'checkout' || viewName === 'admin') && !state.currentUser) {
             return app.router('login');
         }
@@ -190,12 +179,14 @@ const app = {
             return app.router('home');
         }
 
+        // Mostra a view alvo
         const target = document.getElementById(`view-${viewName}`);
         if (target) {
             target.classList.remove('hidden');
             window.scrollTo(0, 0);
         }
 
+        // Lógica específica de cada tela
         if (viewName === 'home') app.renderHome();
         if (viewName === 'cart') app.renderCart();
         if (viewName === 'checkout') app.renderCheckout();
@@ -209,19 +200,22 @@ const app = {
         const now = new Date();
         const hour = now.getHours();
         const { morning, afternoon } = CONSTANTS.OPERATING_HOURS;
+        // Lógica simples: Aberto das 8h às 12h E das 14h às 18h
         state.isStoreOpen = (hour >= morning.start && hour < morning.end) || 
                            (hour >= afternoon.start && hour < afternoon.end);
         
+        // Atualiza visualmente o badge
         const badges = document.querySelectorAll('.status-badge');
         badges.forEach(badge => {
+            const label = badge.querySelector('.status-text-label');
             if(state.isStoreOpen) {
                 badge.classList.remove('closed');
                 badge.classList.add('open');
-                badge.querySelector('.status-text-label').innerText = 'Loja Aberta';
+                if(label) label.innerText = 'Loja Aberta';
             } else {
                 badge.classList.remove('open');
                 badge.classList.add('closed');
-                badge.querySelector('.status-text-label').innerText = 'Fechado';
+                if(label) label.innerText = 'Fechado';
             }
         });
     },
@@ -234,11 +228,14 @@ const app = {
         setTimeout(() => toast.classList.remove('show'), 3000);
     },
 
-    // --- AUTH ---
+    // --- AUTENTICAÇÃO ---
     handleLogin: (e) => {
         e.preventDefault();
-        const phone = document.getElementById('login-phone').value.replace(/\D/g,'');
-        if(phone === '123') {
+        const phoneInput = document.getElementById('login-phone').value;
+        const phone = phoneInput.replace(/\D/g,''); // Remove não-números
+        
+        // Login facilitado para Admin
+        if(phone === '123' || phone === '5585999195930') {
             state.currentUser = state.users.find(u => u.role === 'ADMIN');
         } else {
             state.currentUser = state.users.find(u => u.phone === phone);
@@ -250,7 +247,7 @@ const app = {
             app.router('home');
         } else {
             const err = document.getElementById('login-error');
-            err.innerText = 'Usuário não encontrado. Use "5585999195930" para Admin.';
+            err.innerText = 'Usuário não encontrado. Admin use: 5585999195930';
             err.classList.remove('hidden');
         }
     },
@@ -261,8 +258,9 @@ const app = {
         const phone = document.getElementById('reg-phone').value.replace(/\D/g,'');
 
         if (state.users.some(u => u.phone === phone)) {
-            document.getElementById('register-error').classList.remove('hidden');
-            document.getElementById('register-error').innerText = 'Telefone já cadastrado.';
+            const err = document.getElementById('register-error');
+            err.classList.remove('hidden');
+            err.innerText = 'Este telefone já possui cadastro.';
             return;
         }
 
@@ -270,7 +268,7 @@ const app = {
         state.users.push(newUser);
         Storage.set('users', state.users);
         
-        alert('Cadastro realizado! Faça login.');
+        alert('Cadastro realizado com sucesso!');
         app.router('login');
     },
 
@@ -307,18 +305,18 @@ const app = {
         else cartCount.classList.add('hidden');
     },
 
-    // --- RENDER ---
+    // --- RENDERIZAÇÃO DA HOME ---
     renderHome: () => {
         const grid = document.getElementById('products-grid');
         
         if (!state.products || state.products.length === 0) {
-            grid.innerHTML = '<p class="text-center" style="grid-column:1/-1">Nenhum produto disponível.</p>';
+            grid.innerHTML = '<p class="text-center" style="grid-column:1/-1; padding: 2rem;">Carregando catálogo...</p>';
             return;
         }
 
         grid.innerHTML = state.products.map(p => `
             <div class="product-card">
-                <img src="${p.imageUrl}" alt="${p.name}" 
+                <img src="${p.imageUrl}" alt="${p.name}" loading="lazy"
                      onerror="this.onerror=null;this.src='${CONSTANTS.PLACEHOLDER_IMG}';">
                 <div class="card-body">
                     <h3>${p.name}</h3>
@@ -333,10 +331,12 @@ const app = {
         `).join('');
     },
 
+    // --- CARRINHO ---
     addToCart: (id) => {
+        // Alerta suave se a loja estiver fechada, mas permite adicionar
         if (!state.isStoreOpen) {
             const { morning, afternoon } = CONSTANTS.OPERATING_HOURS;
-            alert(`Atenção: A loja está fechada agora.\nSeus pedidos serão processados no próximo horário:\n${morning.start}h-${morning.end}h ou ${afternoon.start}h-${afternoon.end}h.`);
+            alert(`A loja está fechada no momento.\nVocê pode montar o pedido, mas só responderemos no horário:\n${morning.start}h-${morning.end}h ou ${afternoon.start}h-${afternoon.end}h.`);
         }
 
         const product = state.products.find(p => p.id === id);
@@ -408,6 +408,7 @@ const app = {
         app.updateHeader();
     },
 
+    // --- CHECKOUT ---
     renderCheckout: () => {
         const summaryDiv = document.getElementById('checkout-summary');
         const total = state.cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
@@ -429,25 +430,14 @@ const app = {
         const city = document.getElementById('addr-city').value;
         const total = state.cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
 
-        if (isFirebaseConfigured && db) {
-            try {
-                await db.collection("orders").add({
-                    userId: state.currentUser.id,
-                    customer: state.currentUser.name,
-                    phone: state.currentUser.phone,
-                    items: state.cart,
-                    total: total,
-                    address: `${street}, ${city}`,
-                    timestamp: new Date().toISOString()
-                });
-            } catch(e) { console.log("Erro ao salvar pedido (modo demo?)", e); }
-        }
-
-        const itemsText = state.cart.map(i => `${i.quantity}x ${i.name}`).join('%0A');
-        const msg = `*NOVO PEDIDO - WONDER KIDS*%0A%0A${itemsText}%0A%0A*Total: R$ ${total.toFixed(2)}*%0A%0A📍 Endereço:%0A${street}, ${city}%0A%0A👤 Cliente: ${state.currentUser.name}`;
+        // Monta mensagem para WhatsApp
+        const itemsText = state.cart.map(i => `• ${i.quantity}x ${i.name}`).join('%0A');
+        const msg = `*NOVO PEDIDO - WONDER KIDS*%0A%0A${itemsText}%0A%0A*Total: R$ ${total.toFixed(2)}*%0A%0A📍 *Entrega:*%0A${street}, ${city}%0A%0A👤 *Cliente:* ${state.currentUser.name}`;
         
+        // Abre WhatsApp
         window.open(`https://wa.me/${CONSTANTS.STORE_PHONE}?text=${msg}`, '_blank');
 
+        // Limpa carrinho
         state.cart = [];
         Storage.set('cart', []);
         app.updateHeader();
@@ -485,6 +475,7 @@ const app = {
         modal.classList.remove('hidden');
         const preview = document.getElementById('prod-image-preview');
         
+        // Reset form
         document.getElementById('prod-id').value = '';
         document.getElementById('prod-name').value = '';
         document.getElementById('prod-price').value = '';
@@ -493,10 +484,9 @@ const app = {
         document.getElementById('prod-desc').value = '';
         preview.classList.remove('visible');
 
+        // Se for edição
         if (productId) {
             let product = state.products.find(p => p.id === productId);
-            if (typeof productId === 'object') product = productId;
-
             if (product) {
                 document.getElementById('prod-id').value = product.id;
                 document.getElementById('prod-name').value = product.name;
@@ -526,12 +516,12 @@ const app = {
         
         let imageUrl = urlInput || document.getElementById('prod-image-current').value || CONSTANTS.PLACEHOLDER_IMG;
 
-        // Se tiver arquivo (Base64) - Aviso: Isso enche o LocalStorage rápido
+        // Se o usuário selecionou arquivo (Só funciona no dispositivo dele)
         if (fileInput) {
             try {
                 imageUrl = await Utils.fileToBase64(fileInput);
             } catch(err) {
-                console.error("Erro arquivo", err);
+                console.error("Erro no arquivo", err);
             }
         }
 
@@ -539,14 +529,8 @@ const app = {
             id: id || Date.now().toString(),
             name, category, price, description: desc, imageUrl
         };
-
-        // Salvar Lógica (Híbrida)
-        if (isFirebaseConfigured && db) {
-            // Salvar no Firebase
-            // ...
-        } 
         
-        // SEMPRE Salvar no LocalStorage (Modo Demo Persistente)
+        // Salvar no LocalStorage
         if (id) {
             const idx = state.products.findIndex(p => p.id === id);
             if(idx >= 0) state.products[idx] = productData;
@@ -554,7 +538,6 @@ const app = {
             state.products.push(productData);
         }
         
-        // Persistir
         Storage.set('products', state.products);
         
         document.getElementById('modal-product').classList.add('hidden');
@@ -566,7 +549,7 @@ const app = {
     deleteProduct: (id) => {
         if(confirm("Remover este produto?")) {
             state.products = state.products.filter(p => p.id !== id);
-            Storage.set('products', state.products); // Salvar remoção
+            Storage.set('products', state.products);
             app.renderHome();
             app.renderAdminProducts();
         }
@@ -596,5 +579,5 @@ const Utils = {
     })
 };
 
-// Iniciar
+// Iniciar Aplicação
 document.addEventListener('DOMContentLoaded', app.init);
